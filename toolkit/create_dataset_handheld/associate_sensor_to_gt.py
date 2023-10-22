@@ -66,7 +66,7 @@ with open(filename, 'w') as fw:
                     next_utc_time = dtime.utcfromtimestamp(int(log_strings[pos+1].split(',')[0]) / 1e9).strftime('%Y-%m-%d-%H-%M-%S-%f')
                     next_datetime = dt.datetime.strptime(next_utc_time,"%Y-%m-%d-%H-%M-%S-%f")
                     dists[1] = abs(next_datetime - current_datetime)
-                    print(next_utc_time)
+                    # print(next_utc_time)
             if pos > 0: #I have a previous line
                 if not log_strings[pos-1][:-1].endswith('png'):
                     previous_utc_time = dtime.utcfromtimestamp(int(log_strings[pos-1].split(',')[0]) / 1e9).strftime('%Y-%m-%d-%H-%M-%S-%f')
@@ -78,7 +78,7 @@ with open(filename, 'w') as fw:
             if shortest_dist < dt.timedelta(minutes=MAX_MINUTES):
                 shortest_idx = dists.index(min(dists))
                 write_line = line[:-1] + ',' + log_strings[pos + 2*shortest_idx -1][:-1] + ','+  str(shortest_dist) + '\n'
-                print(write_line)
+                # print(write_line)
                 fw.write(write_line)
 
             img_counter += 1

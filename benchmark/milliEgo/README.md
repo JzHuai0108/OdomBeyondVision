@@ -53,19 +53,24 @@ pip install keras==2.1.6
 apt-get update -y
 apt-get install python3-tk
 ```
+In another terminal, save the current docker container as an image.
+```
+docker commit 4f80ea09bc41 tensorflow/tensorflow:1.9.0-gpu-py3-full
+```
+start a container from the image
+```
+docker run --gpus all -it --rm -v /home/pi/Documents/results/milliego:/datasets \
+ -v /home/pi/Documents/milliego/OdomBeyondVision/benchmark/milliEgo:/code \
+ tensorflow/tensorflow:1.9.0-gpu-py3-full bash
+
+```
 
 ### Testing
-In host machine, copy code folder into docker container.
-
-```
-docker cp <host code dir> <container ID>:/code
-```
-
 In the docker container, run testing on pre-trained model (cross-attention):
 
 ```
 cd /code
-python test_trajectory.py
+python test.py
 ```
 Check the generated trajectories in `/code/figs` and results to be quantitatively evaluated in `/code/results`.
 

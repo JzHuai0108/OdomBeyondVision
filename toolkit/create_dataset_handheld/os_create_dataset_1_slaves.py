@@ -9,16 +9,20 @@ DESCRIPTION = """This script automatically generates datasets from massive data 
 # Please use config.yaml to custom your dataset creation
 parent_dir = dirname(dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 with open(join(parent_dir, 'config.yaml'), 'r') as f:
-    cfg = yaml.load(f)
+    cfg = yaml.safe_load(f)
 
 all_exp_files = cfg['dataset_creation_handheld']['all_exp_files']
 total_training_files = cfg['dataset_creation_handheld']['test_file_idx']
 train_files = all_exp_files[0:total_training_files]  # make sure you sort your sequence into: list training seq, list testing seq
 dataroot = cfg['dataset_creation_handheld']['dataroot']
-master = cfg['dataset_creation_handheld']['master']
-slaves = cfg['dataset_creation_handheld']['slaves']
-master_gap = cfg['dataset_creation_handheld']['master_gap']
-saved_dir_h5 = cfg['dataset_creation_handheld']['saved_dir_h5'] + 'gap' + str(master_gap)
+# master = cfg['dataset_creation_handheld']['master']
+# slaves = cfg['dataset_creation_handheld']['slaves']
+# master_gap = cfg['dataset_creation_handheld']['master_gap']
+# saved_dir_h5 = cfg['dataset_creation_handheld']['saved_dir_h5'] + 'gap' + str(master_gap)
+master = cfg['dataset_creation_handheld']['milliego']['master']
+slaves = cfg['dataset_creation_handheld']['milliego']['slaves']
+master_gap = cfg['dataset_creation_handheld']['milliego']['master_gap']
+saved_dir_h5 = cfg['dataset_creation_handheld']['milliego']['saved_dir_h5'] + 'gap' + str(master_gap)
 
 
 if not os.path.exists(saved_dir_h5):
@@ -35,25 +39,25 @@ with open(join(saved_dir_h5, 'seq_idx.json'), 'w') as fp:
 # Generate sensor data association
 ######################
 
-# for exp_date in all_exp_files:
-#     current_dir = join(dataroot, exp_date)
-#     print('Processing directory: ', current_dir)
-#
-#     # Associate master with GT
-#     sensor_dir = join(current_dir, master)
-#     gt_file = join(current_dir, '_slash_aft_mapped_to_init.csv')
-#     cmd = 'python -W ignore ' + 'associate_sensor_to_gt.py' + ' --sensor_dir ' + sensor_dir + \
-#           ' --gt ' + gt_file + ' --save_dir ' + current_dir
-#     print(cmd)
-#     os.system(cmd)
-#
-#     # Associate master with 1st slave, which is IMU
-#     slave_file = join(current_dir, '_slash_imu_slash_data.csv')  # for slave imu file
-#     sync_file = join(current_dir, str('odom_' + master + '_ref.csv'))
-#     cmd = 'python -W ignore ' + 'sync_ref_sensor_to_slave_imu.py' + ' --slave_imu ' + slave_file + ' --sync_file ' \
-#           + sync_file + ' --save_dir ' + ' ' + current_dir
-#     print(cmd)
-#     os.system(cmd)
+for exp_date in all_exp_files:
+    current_dir = join(dataroot, exp_date)
+    print('Processing directory: ', current_dir)
+
+    # Associate master with GT
+    sensor_dir = join(current_dir, master)
+    gt_file = join(current_dir, '_slash_aft_mapped_to_init.csv')
+    cmd = 'python -W ignore ' + 'associate_sensor_to_gt.py' + ' --sensor_dir ' + sensor_dir + \
+          ' --gt ' + gt_file + ' --save_dir ' + current_dir
+    print(cmd)
+    os.system(cmd)
+
+    # Associate master with 1st slave, which is IMU
+    slave_file = join(current_dir, '_slash_imu_slash_data.csv')  # for slave imu file
+    sync_file = join(current_dir, str('odom_' + master + '_ref.csv'))
+    cmd = 'python -W ignore ' + 'sync_ref_sensor_to_slave_imu.py' + ' --slave_imu ' + slave_file + ' --sync_file ' \
+          + sync_file + ' --save_dir ' + ' ' + current_dir
+    print(cmd)
+    os.system(cmd)
 
 
 # #######################
@@ -62,38 +66,38 @@ with open(join(saved_dir_h5, 'seq_idx.json'), 'w') as fp:
 
 ref_file_name = str('odom_' + master + '_ref_' + slaves[0] + '.csv')
 
-# # Check whether the master requires custom range value (either thermal/depth). If yes then we need to compute range.
-# is_need_thermal_range = 0
-# is_need_depth_range = 0
-# thermal_idx = 0
-# depth_idx = 0
-# if master == 'thermal':
-#     is_need_thermal_range = 1
-#     thermal_idx = 0
-# elif master == 'depth':
-#     is_need_depth_range = 1
-#     depth_idx = 0
-# elif master != 'thermal' and master != 'depth':
-#     file_range = open(join(saved_dir_h5, str('dataset_range_' + master + '.txt')), "w")
-#     L = [str(0), ',', str(255)]
-#     file_range.writelines(L)
-#     file_range.close()
-#
-# for i in range(len(slaves)):
-#     if slaves[i] == 'thermal':
-#         is_need_thermal_range = 1
-#         thermal_idx = i + 1
-#     elif slaves[i] == 'depth':
-#         is_need_depth_range = 1
-#         depth_idx = i + 1
-#
-# # compute range value of the thermal and depth data
-# if is_need_thermal_range == 1:
-#     cmd = 'python -W ignore ' + 'compute_dataset_range_value.py' + ' --dataroot ' + dataroot + ' --saved_dir_h5 ' + saved_dir_h5 \
-#           + ' --data_type ' + 'thermal' + ' --ref_file_name ' + ref_file_name + ' --ref_col_idx ' + str(thermal_idx) + \
-#           ' --gap ' + str(master_gap)
-#     print(cmd)
-#     os.system(cmd)
+# Check whether the master requires custom range value (either thermal/depth). If yes then we need to compute range.
+is_need_thermal_range = 0
+is_need_depth_range = 0
+thermal_idx = 0
+depth_idx = 0
+if master == 'thermal':
+    is_need_thermal_range = 1
+    thermal_idx = 0
+elif master == 'depth':
+    is_need_depth_range = 1
+    depth_idx = 0
+elif master != 'thermal' and master != 'depth':
+    file_range = open(join(saved_dir_h5, str('dataset_range_' + master + '.txt')), "w")
+    L = [str(0), ',', str(255)]
+    file_range.writelines(L)
+    file_range.close()
+
+for i in range(len(slaves)):
+    if slaves[i] == 'thermal':
+        is_need_thermal_range = 1
+        thermal_idx = i + 1
+    elif slaves[i] == 'depth':
+        is_need_depth_range = 1
+        depth_idx = i + 1
+
+# compute range value of the thermal and depth data
+if is_need_thermal_range == 1:
+    cmd = 'python -W ignore ' + 'compute_dataset_range_value.py' + ' --dataroot ' + dataroot + ' --saved_dir_h5 ' + saved_dir_h5 \
+          + ' --data_type ' + 'thermal' + ' --ref_file_name ' + ref_file_name + ' --ref_col_idx ' + str(thermal_idx) + \
+          ' --gap ' + str(master_gap)
+    print(cmd)
+    os.system(cmd)
 #
 # if is_need_depth_range == 1:
 #     cmd = 'python -W ignore ' + 'compute_dataset_range_value.py' + ' --dataroot ' + dataroot + ' --saved_dir_h5 ' + saved_dir_h5 \
@@ -102,13 +106,13 @@ ref_file_name = str('odom_' + master + '_ref_' + slaves[0] + '.csv')
 #     print(cmd)
 #     os.system(cmd)
 #
-# # compute dataset mean the master
-# range_master = join(saved_dir_h5, str('dataset_range_' + master + '.txt'))
-# cmd = 'python -W ignore ' + 'compute_dataset_mean.py' + ' --dataroot ' + dataroot + ' --saved_dir_h5 ' + saved_dir_h5 \
-#       + ' --data_type ' + master + ' --ref_file_name ' + ref_file_name + ' --ref_col_idx ' + str(0) \
-#       + ' --range_file ' + range_master + ' --gap ' + str(master_gap)
-# print(cmd)
-# os.system(cmd)
+# compute dataset mean the master
+range_master = join(saved_dir_h5, str('dataset_range_' + master + '.txt'))
+cmd = 'python -W ignore ' + 'compute_dataset_mean.py' + ' --dataroot ' + dataroot + ' --saved_dir_h5 ' + saved_dir_h5 \
+      + ' --data_type ' + master + ' --ref_file_name ' + ref_file_name + ' --ref_col_idx ' + str(0) \
+      + ' --range_file ' + range_master + ' --gap ' + str(master_gap)
+print(cmd)
+os.system(cmd)
 #
 # # compute dataset mean for the slaves
 # for i in range(len(slaves) - 1):  # minus IMU

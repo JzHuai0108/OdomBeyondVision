@@ -166,11 +166,11 @@ dataset_creation_drone:
 
 dataset_creation_handheld:
     img_topics:
-        - '/camera/color/image_raw'
-        - '/camera/depth/image_rect_raw'
-        - '/flir_boson/image_raw'
+#        - '/camera/color/image_raw'
+#        - '/camera/depth/image_rect_raw'
+#        - '/flir_boson/image_raw'
     pcl_topics:
-        - '/velodyne_points'
+#        - '/velodyne_points'
         - '/mmWaveDataHdl/RScan_middle'
     csv_topics:
         - '/imu/data'
@@ -186,9 +186,9 @@ dataset_creation_handheld:
         v_res: 2
         max_v: 6
         nb_overlay_frames: 3
-    dataroot: '/media/lipeize/LaCie/Dataset/Oxford-rosbag/handheld'
+    dataroot: '/media/pi/BackupPlus/jhuai/data/odombeyondvision/rosbags/handheld'
     milliego:
-        saved_dir_h5: '/mnt/workdir/Dataset/Ox-Ed-rosbags/milliego_handheld_'
+        saved_dir_h5: '/home/pi/Documents/results/milliego/milliego_handheld_'
         master: 'mmwave_middle'
         slaves: # General rule: set the IMU as the last slave
              # - 'rgb'
@@ -196,11 +196,12 @@ dataset_creation_handheld:
              - 'imu'
         master_gap: 4 # for the master
     deeptio:
-        saved_dir_h5: '/media/lipeize/LaCie/Dataset/Oxford-rosbag/deeptio_h5'
+        saved_dir_h5: '/home/pi/Documents/results/deeptio/deeptio_h5'
         master: 'thermal'
         slaves: # General rule: set the IMU as the last slave
              - 'imu'
         master_gap: 5 # for the master
+    test_file_idx: 44 # the number of all_exp_files to be saved to h5 files.
     all_exp_files:
           - 2020-01-28-11-10-12
           - 2020-01-28-11-15-11

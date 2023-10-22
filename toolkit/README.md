@@ -27,7 +27,7 @@ python process_radar_handheld_uav.py
 ```
 Or:
 ```
-python process_radar_handheld.py
+python process_radar_ugv.py
 ```
 
 Platform can be selected by configuring inside of `process_radar_handheld_uav.py`.
@@ -36,9 +36,11 @@ Platform can be selected by configuring inside of `process_radar_handheld_uav.py
 
 We package sequences into h5 files in order to facilitate training.
 
-`create_dataset_milliego` creates training dataset for milliEgo on Handheld and UAV platforms, where there's only 1 radar.
+`create_dataset_handheld` creates training dataset for milliEgo on Handheld platforms, where there's only 1 radar.
 
-`create_dataset_milliego_ugv` creates training dataset for milliEgo on UGV platform. It uses data from 3 radars.
+`create_dataset_drone` creates training dataset for milliEgo on UAV platforms, where there's only 1 radar.
+
+`create_dataset_milliego` creates training dataset for milliEgo on UGV platform. It uses data from 3 radars.
 
 `create_dataset_deeptio` creates dataset for DeepTIO on Handheld and UGV platforms, where thermal images are 16bit.
 
@@ -54,4 +56,9 @@ Configure the parameters in `config.yaml`.
 To create the datasets, simply go to corresponding folder, and run:
 ```
 python os_create_dataset.py
+```
+
+To create handheld radar-IMU data for milliego, run
+```
+python OdomBeyondVision/toolkit/create_dataset_handheld/os_create_dataset_1_slaves.py
 ```

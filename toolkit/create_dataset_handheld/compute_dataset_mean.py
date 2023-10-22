@@ -29,7 +29,7 @@ GAP = int(args.gap)
 
 parent_dir = dirname(dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 with open(join(parent_dir, 'config.yaml'), 'r') as f:
-    cfg = yaml.load(f)
+    cfg = yaml.safe_load(f)
 
 all_exp_files = cfg['dataset_creation_handheld']['all_exp_files']
 total_training_files = cfg['dataset_creation_handheld']['test_file_idx']
@@ -84,7 +84,7 @@ for train_file in train_files:
             sum_G += np.sum(img[:, :, 1])
             sum_B += np.sum(img[:, :, 2])
 
-        print('Load img ', str(num_images), '. File: ', img_path, 'Sum R value: ', str(sum_R))
+        # print('Load img ', str(num_images), '. File: ', img_path, 'Sum R value: ', str(sum_R))
         num_images += 1
 
 width = img.shape[1]

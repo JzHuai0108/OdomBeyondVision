@@ -21,10 +21,11 @@ seqs = [re.search('seq_(.+?).h5', file).group(1) for file in test_files]
 for model in models:
     print('Test Model {}'.format(model))
     model_dir = join(cfg['mvo']['model_dir'], model)
-    max_epochs = max([int(x)
-                     for x in os.listdir(model_dir) if str.isdigit(x[0])])
-    epochs = sorted([str(x)
-                    for x in os.listdir(model_dir) if str.isdigit(x[0])])
+    # max_epochs = max([int(x)
+    #                  for x in os.listdir(model_dir) if str.isdigit(x[0])])
+    # epochs = sorted([str(x)
+    #                 for x in os.listdir(model_dir) if str.isdigit(x[0])])
+    epochs = cfg['eval']['epochs']
     print(epochs)
 
     for epoch in epochs:

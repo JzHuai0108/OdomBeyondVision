@@ -60,7 +60,7 @@ def main():
     IMU_LENGTH = (np.int(os.path.dirname(args.data_dir)[-1]) - 1) * 5
     if IMU_LENGTH < 10:
         IMU_LENGTH = 10
-    IMU_LENGTH = 25
+    IMU_LENGTH = 20
     print('IMU LENGTH is {}'.format(IMU_LENGTH))
     # Define and construct model
     print("Building network model ......")

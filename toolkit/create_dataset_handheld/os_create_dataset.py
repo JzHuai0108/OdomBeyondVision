@@ -9,16 +9,16 @@ DESCRIPTION = """This script automatically generates datasets from massive data 
 # Please use config.yaml to custom your dataset creation
 parent_dir = dirname(dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 with open(join(parent_dir, 'config.yaml'), 'r') as f:
-    cfg = yaml.load(f)
+    cfg = yaml.safe_load(f)
 
 all_exp_files = cfg['dataset_creation_handheld']['all_exp_files']
 total_training_files = cfg['dataset_creation_handheld']['test_file_idx']
 train_files = all_exp_files[0:total_training_files] # make sure you sort your sequence into: list training seq, list testing seq
 dataroot = cfg['dataset_creation_handheld']['dataroot']
-master = cfg['dataset_creation_handheld']['master']
-slaves = cfg['dataset_creation_handheld']['slaves']
-master_gap = cfg['dataset_creation_handheld']['master_gap']
-saved_dir_h5 = cfg['dataset_creation_handheld']['saved_dir_h5'] + 'gap_' + str(master_gap)
+master = cfg['dataset_creation_handheld']['milliego']['master']
+slaves = cfg['dataset_creation_handheld']['milliego']['slaves']
+master_gap = cfg['dataset_creation_handheld']['milliego']['master_gap']
+saved_dir_h5 = cfg['dataset_creation_handheld']['milliego']['saved_dir_h5'] + 'gap_' + str(master_gap)
 
 if not os.path.exists(saved_dir_h5):
     os.makedirs(saved_dir_h5)

@@ -20,8 +20,8 @@ with open(join(parentdir, 'config.yaml'), 'r') as f:
     cfg = yaml.safe_load(f)
 
 # Select Platform
-# platform = 'dataset_creation_handheld'
-platform = 'dataset_creation_drone'  # UAV
+platform = 'dataset_creation_handheld'
+# platform = 'dataset_creation_drone'  # UAV
 
 exp_names = cfg[platform]['all_exp_files']
 pendrive_dir = cfg[platform]['dataroot']
@@ -58,7 +58,7 @@ for BAG_DATE in exp_names:
     ###################
     # Overlay frames  #
     ###################
-    frames = np.array(frames)
+    frames = np.array(frames, dtype=object)
     # overlay frames accounting for sparse pcl
     overlay_frames = list()
     # frames_array = np.array(frames)

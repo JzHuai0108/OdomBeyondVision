@@ -60,12 +60,12 @@ def transform44(l):
     q = np.array(l[4:8], dtype=np.float64, copy=True)
     nq = np.dot(q, q)
     if nq < _EPS:
-        return np.array((
-            (1.0, 0.0, 0.0, t[0])
-            (0.0, 1.0, 0.0, t[1])
-            (0.0, 0.0, 1.0, t[2])
-            (0.0, 0.0, 0.0, 1.0)
-        ), dtype=np.float64)
+        return np.array([
+            [1.0, 0.0, 0.0, t[0]],
+            [0.0, 1.0, 0.0, t[1]],
+            [0.0, 0.0, 1.0, t[2]],
+            [0.0, 0.0, 0.0, 1.0]
+        ], dtype=np.float64)
     q *= np.sqrt(2.0 / nq)
     q = np.outer(q, q)
     return np.array((
@@ -138,11 +138,13 @@ def main():
     # Load all sequences name and list of master-slaves
     parent_dir = dirname(dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
     with open(join(parent_dir, 'config.yaml'), 'r') as f:
-        cfg = yaml.load(f)
+        cfg = yaml.safe_load(f)
 
     all_exps = cfg['dataset_creation_handheld']['all_exp_files']
-    master = cfg['dataset_creation_handheld']['master']
-    slaves = cfg['dataset_creation_handheld']['slaves']
+    # master = cfg['dataset_creation_handheld']['master']
+    # slaves = cfg['dataset_creation_handheld']['slaves']
+    master = cfg['dataset_creation_handheld']['milliego']['master']
+    slaves = cfg['dataset_creation_handheld']['milliego']['slaves']
 
     # Prepare the path files to load dataset range and mean
     range_master_file = join(save_dir, str('dataset_range_' + master + '.txt'))
@@ -238,9 +240,9 @@ def main():
                                                  dtype=np.float64)
                 imu_start += 6
             total_img_counter += 1
-            print('Processing folder: ', all_exps[j], 'Total img idx ', str(total_img_counter),
-                  '. Master ', master, ' size: ', np.shape(train_master),
-                  '. Slave ', slaves[0], ' size: ', np.shape(train_slave_imu),)
+            # print('Processing folder: ', all_exps[j], 'Total img idx ', str(total_img_counter),
+            #       '. Master ', master, ' size: ', np.shape(train_master),
+            #       '. Slave ', slaves[0], ' size: ', np.shape(train_slave_imu),)
 
         print('Saving to h5 file ....')
         train_timestamp_np = np.array(train_timestamp)

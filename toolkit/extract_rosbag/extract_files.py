@@ -7,13 +7,13 @@ import numpy as np
 import cv2
 import csv
 import yaml
-from tqdm import tqdm
+
 import string
 import sensor_msgs.point_cloud2
 import shutil
 import scipy.io as sio
 import inspect
-
+from tqdm import tqdm
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -26,8 +26,8 @@ with open(join(parentdir, 'config.yaml'), 'r') as f:
 
 # Select Platform
 # platform = 'dataset_creation_robot'  # UGV
-# platform = 'dataset_creation_handheld'
-platform = 'dataset_creation_drone'  # UAV
+platform = 'dataset_creation_handheld'
+# platform = 'dataset_creation_drone'  # UAV
 
 pendrive_dir = cfg[platform]['dataroot']
 save_dir = pendrive_dir
@@ -39,7 +39,7 @@ thermal_16bit = cfg[platform]['thermal_16bit']
 # num_radar = len([topic for topic in pcl_topics if 'mmWave' in topic])
 
 counter = 0
-for BAG_DATE in exp_names:
+for bid, BAG_DATE in enumerate(exp_names):
     print('********* Processing {} *********'.format(BAG_DATE))
     ROS_SAVE_DIR = join(save_dir, BAG_DATE)
 
@@ -48,6 +48,26 @@ for BAG_DATE in exp_names:
     RGB_SAVE_PATH = os.path.join(*[ROS_SAVE_DIR,  'rgb'])
     DEPTH_SAVE_PATH = os.path.join(*[ROS_SAVE_DIR, 'depth'])
     THERMAL_SAVE_PATH = os.path.join(*[ROS_SAVE_DIR, 'thermal'])
+
+    gt_bag = os.path.join(pendrive_dir, 'gt', 'gt_' + str(bid + 1) + ".bag")
+    bag = rosbag.Bag(gt_bag, 'r')
+    topics = ['/aft_mapped_to_init']
+    csv_file = open(os.path.join(ROS_SAVE_DIR, '_slash_aft_mapped_to_init.csv'), 'w')
+    csv_writer = csv.writer(csv_file)
+    csv_writer.writerow(['rosbagTimestamp', 'x', 'y', 'z', 'x.1', 'y.1', 'z.1', 'w'])
+    starttime = 0
+    finishtime = 0
+    gtid = 0
+    for topic, msg, t in bag.read_messages(topics):
+        if gtid == 0:
+            starttime = msg.header.stamp
+        finishtime = msg.header.stamp
+        pose = msg.pose.pose
+        csv_writer.writerow(
+            [msg.header.stamp, pose.position.x, pose.position.y, pose.position.z, pose.orientation.x, pose.orientation.y,
+             pose.orientation.z, pose.orientation.w])
+        gtid += 1
+    csv_file.close()
 
     print(" Creating folder for RGB images {}".format(RGB_SAVE_PATH))
     print(" Creating folder for Depth images {}".format(DEPTH_SAVE_PATH))
@@ -62,6 +82,14 @@ for BAG_DATE in exp_names:
 
     print("Reading Rosbag")
     bag = rosbag.Bag(ROSBAG_PATH, 'r')
+    stime = bag.get_start_time()
+    etime = bag.get_end_time()
+
+    sdiff = starttime.to_sec() - stime
+    ediff = finishtime.to_sec() - etime
+    print('Time diff between gt and data bag, start {}, end {}'.format(sdiff, ediff))
+    if abs(sdiff) > 2 or abs(ediff) > 2:
+        print('Warn: Too large time diff between gt and data bag.')
 
     #########################################
     # process topics based on txt and numbers
@@ -104,7 +132,7 @@ for BAG_DATE in exp_names:
     #########################################
     # process topics based on point cloud
     #########################################
-    print("Reading PCL topics")
+    print("Reading PCL topics {}".format(pcl_topics))
     # for topic, msg, t in rosbag.Bag(ROSBAG_PATH, 'r').read_messages(topics=['/velodyne_points', '/mmWaveDataHdl/RScan_middle']):
     # for topic, msg, t in rosbag.Bag(ROSBAG_PATH, 'r').read_messages(topics=pcl_topics):
     for topic, msg, t in tqdm(bag.read_messages(topics=pcl_topics)):
@@ -166,32 +194,33 @@ for BAG_DATE in exp_names:
     #########################################
     # process topics based on images
     #########################################
-    print("Reading Image topics")
-    # for topic, msg, t in tqdm(rosbag.Bag(ROSBAG_PATH, 'r').read_messages(topics=img_topics)):
-    for topic, msg, t in tqdm(bag.read_messages(topics=img_topics)):
-        if topic == '/camera/color/image_raw':
-            counter += 1
-            #image_name = 'color_'+str(msg.header.stamp.secs)+ '.' + "{0:09d}".format(msg.header.stamp.nsecs) + ".png"
-            image_name = str(t) + ".png"
-            np_arr = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, -1)  # 8bit RGB image
-            cv_image = cv2.cvtColor(np_arr, cv2.COLOR_RGB2BGR)
-            cv2.imwrite(os.path.join(RGB_SAVE_PATH, image_name), cv_image)
-        if topic == '/camera/depth/image_rect_raw':
-            counter += 1
-            # image_name = 'depth_'+str(msg.header.stamp.secs)+ '.' + "{0:09d}".format(msg.header.stamp.nsecs) + ".png"
-            image_name = str(t) + ".png"
-            np_arr = np.frombuffer(msg.data, dtype=np.uint16).reshape(msg.height, msg.width, -1)  # 16bit depth image
-            cv2.imwrite(os.path.join(DEPTH_SAVE_PATH, image_name), np_arr)
-        if topic == '/flir_boson/image_raw':
-            counter += 1
-            # image_name = 'depth_'+str(msg.header.stamp.secs)+ '.' + "{0:09d}".format(msg.header.stamp.nsecs) + ".png"
-            image_name = str(t) + ".png"
-            if thermal_16bit:
-                np_arr = np.frombuffer(msg.data, np.uint16).reshape(msg.height, msg.width, -1)  # 16bit thermal image
-            else:
-                np_arr = np.frombuffer(msg.data, np.uint8).reshape(msg.height, msg.width, -1)  # 8bit thermal image
-            np_arr = np.reshape(np_arr, (msg.height, msg.width))
-            # cv_image = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)
-            cv2.imwrite(os.path.join(THERMAL_SAVE_PATH, image_name), np_arr)
+    if img_topics:
+        print("Reading Image topics {}".format(img_topics))
+        # for topic, msg, t in tqdm(rosbag.Bag(ROSBAG_PATH, 'r').read_messages(topics=img_topics)):
+        for topic, msg, t in tqdm(bag.read_messages(topics=img_topics)):
+            if topic == '/camera/color/image_raw':
+                counter += 1
+                #image_name = 'color_'+str(msg.header.stamp.secs)+ '.' + "{0:09d}".format(msg.header.stamp.nsecs) + ".png"
+                image_name = str(t) + ".png"
+                np_arr = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, -1)  # 8bit RGB image
+                cv_image = cv2.cvtColor(np_arr, cv2.COLOR_RGB2BGR)
+                cv2.imwrite(os.path.join(RGB_SAVE_PATH, image_name), cv_image)
+            if topic == '/camera/depth/image_rect_raw':
+                counter += 1
+                # image_name = 'depth_'+str(msg.header.stamp.secs)+ '.' + "{0:09d}".format(msg.header.stamp.nsecs) + ".png"
+                image_name = str(t) + ".png"
+                np_arr = np.frombuffer(msg.data, dtype=np.uint16).reshape(msg.height, msg.width, -1)  # 16bit depth image
+                cv2.imwrite(os.path.join(DEPTH_SAVE_PATH, image_name), np_arr)
+            if topic == '/flir_boson/image_raw':
+                counter += 1
+                # image_name = 'depth_'+str(msg.header.stamp.secs)+ '.' + "{0:09d}".format(msg.header.stamp.nsecs) + ".png"
+                image_name = str(t) + ".png"
+                if thermal_16bit:
+                    np_arr = np.frombuffer(msg.data, np.uint16).reshape(msg.height, msg.width, -1)  # 16bit thermal image
+                else:
+                    np_arr = np.frombuffer(msg.data, np.uint8).reshape(msg.height, msg.width, -1)  # 8bit thermal image
+                np_arr = np.reshape(np_arr, (msg.height, msg.width))
+                # cv_image = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)
+                cv2.imwrite(os.path.join(THERMAL_SAVE_PATH, image_name), np_arr)
 
     bag.close()
